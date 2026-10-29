@@ -153,6 +153,23 @@
   .foot-nav{margin-top:16px}
   .legal a.mlm-link{color:#fff;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent)}
   .legal a.mlm-link:hover{color:var(--accent-2)}
+  /* Email chooser */
+  .mp-backdrop{position:fixed;inset:0;z-index:100;background:rgba(15,22,33,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+  .mp-backdrop[hidden]{display:none}
+  .mp{position:relative;background:#fff;color:var(--ink);width:100%;max-width:440px;border-top:4px solid var(--accent);padding:28px 26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.35);max-height:calc(100vh - 32px);overflow:auto}
+  .mp h3{font-stretch:115%;font-size:22px;margin:8px 0 6px}
+  .mp-to{font-size:14px;color:var(--muted);margin-bottom:18px;overflow-wrap:anywhere}
+  .mp-x{position:absolute;top:10px;right:12px;background:none;border:0;font-size:28px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px}
+  .mp-x:hover{color:var(--ink)}
+  .mp-opts{display:grid;gap:8px}
+  .mp-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;font:inherit;font-weight:600;font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--line);border-left:3px solid var(--navy);padding:12px 14px;cursor:pointer;text-decoration:none}
+  .mp-opt small{font-weight:400;font-size:13px;color:var(--muted)}
+  .mp-opt:hover,.mp-opt:focus-visible{border-left-color:var(--accent);background:var(--sand);outline:none}
+  .mp-msg{font-size:14px;font-weight:600;color:#1d6b3a;min-height:1em;margin-top:10px}
+  @media (max-width:600px){
+    .mp-backdrop{align-items:flex-end;padding:0}
+    .mp{max-width:none;padding:24px 18px 20px}
+  }
   .legal{border-top:1px solid rgba(255,255,255,.1);margin-top:44px;padding-top:22px;font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
   @media (max-width:900px){
@@ -336,7 +353,7 @@
   <div class="wrap">
     <div class="stats">
       <div class="stat"><b>2019</b><span>Started brokering freight</span></div>
-      <div class="stat"><b>$300K</b><span>Monthly profit from teams I led at NTG</span></div>
+      <div class="stat"><b>$450K+</b><span>Monthly profit from teams I led at NTG</span></div>
       <div class="stat"><b>~30</b><span>New accounts closed at Megacorp</span></div>
       <div class="stat"><b>2</b><span>Charleston offices opened</span></div>
     </div>
@@ -374,7 +391,7 @@
           <div class="co">Nolan Transportation Group (NTG)</div>
           <h3>Senior Team Lead, Charleston Office</h3>
           <p>Led the Charleston, South Carolina office's broker teams, managing both a team of new brokers and a team of veteran brokers.</p>
-          <span class="hl">Teams producing roughly $300,000 in monthly profit</span>
+          <span class="hl">Teams producing $450,000+ in monthly profit</span>
         </div>
 
         <div class="role">
@@ -443,6 +460,24 @@
   </div>
 </footer>
 
+<div class="mp-backdrop" id="mailpick" hidden>
+  <div class="mp" role="dialog" aria-modal="true" aria-labelledby="mp-title">
+    <button class="mp-x" type="button" data-mp-close aria-label="Close">&times;</button>
+    <div class="eyebrow">Email CTM Freight</div>
+    <h3 id="mp-title">How do you want to send it?</h3>
+    <p class="mp-to" id="mp-to"></p>
+    <div class="mp-opts">
+      <a class="mp-opt" data-svc="gmail" target="_blank" rel="noopener">Gmail</a>
+      <a class="mp-opt" data-svc="outlook-work" target="_blank" rel="noopener">Outlook / Microsoft 365 <small>Work or school</small></a>
+      <a class="mp-opt" data-svc="outlook" target="_blank" rel="noopener">Outlook.com <small>Hotmail, Live, MSN</small></a>
+      <a class="mp-opt" data-svc="yahoo" target="_blank" rel="noopener">Yahoo Mail</a>
+      <a class="mp-opt" data-svc="app">Default email app <small>Apple Mail, Outlook desktop, phone mail</small></a>
+      <button class="mp-opt" type="button" data-svc="copy">Copy email addresses</button>
+    </div>
+    <p class="mp-msg" id="mp-msg" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
 <script>
   (function(){
     var panels={home:document.getElementById('panel-home'),about:document.getElementById('panel-about')};
@@ -461,6 +496,59 @@
     window.addEventListener('hashchange',route);
     route();
     document.getElementById('yr').textContent=new Date().getFullYear();
+  })();
+</script>
+<script>
+  // Email chooser: every mailto link opens a menu (Gmail, Outlook, Yahoo, mail app, copy).
+  (function(){
+    var box=document.getElementById('mailpick'); if(!box) return;
+    var toEl=document.getElementById('mp-to'), msg=document.getElementById('mp-msg'), current=null, lastFocus=null;
+    function parse(href){
+      var rest=href.replace(/^mailto:/i,''), q=rest.indexOf('?');
+      var to=decodeURIComponent(q<0?rest:rest.slice(0,q)).split(',').map(function(s){return s.trim();}).filter(Boolean);
+      var params=new URLSearchParams(q<0?'':rest.slice(q+1));
+      return {href:href,to:to,subject:params.get('subject')||'',body:params.get('body')||''};
+    }
+    function enc(s){return encodeURIComponent(s);}
+    function urlFor(svc,m){
+      var to=m.to, s=m.subject, b=m.body;
+      switch(svc){
+        case 'gmail': return 'https://mail.google.com/mail/?view=cm&fs=1&to='+enc(to.join(','))+'&su='+enc(s)+(b?'&body='+enc(b):'');
+        case 'outlook-work': return 'https://outlook.office.com/mail/deeplink/compose?to='+enc(to.join(';'))+'&subject='+enc(s)+(b?'&body='+enc(b):'');
+        case 'outlook': return 'https://outlook.live.com/mail/0/deeplink/compose?to='+enc(to.join(';'))+'&subject='+enc(s)+(b?'&body='+enc(b):'');
+        case 'yahoo': return 'https://compose.mail.yahoo.com/?to='+enc(to.join(','))+'&subject='+enc(s)+(b?'&body='+enc(b):'');
+        case 'app': return m.href;
+      }
+    }
+    function open(m){
+      current=m; lastFocus=document.activeElement; msg.textContent='';
+      toEl.textContent='To: '+m.to.join(', ')+(m.subject?'  ·  Subject: '+m.subject:'');
+      box.querySelectorAll('a.mp-opt').forEach(function(a){ a.href=urlFor(a.dataset.svc,m); });
+      box.hidden=false; document.body.style.overflow='hidden';
+      box.querySelector('.mp-opt').focus();
+    }
+    function close(){ box.hidden=true; document.body.style.overflow=''; if(lastFocus) lastFocus.focus(); }
+    document.addEventListener('click',function(e){
+      var a=e.target.closest('a[href^="mailto:"]');
+      if(a && !box.contains(a)){ e.preventDefault(); open(parse(a.getAttribute('href'))); return; }
+      if(e.target===box || e.target.closest('[data-mp-close]')){ close(); return; }
+      var opt=e.target.closest('.mp-opt'); if(!opt||!current) return;
+      if(opt.dataset.svc==='copy'){
+        var text=current.to.join(', ');
+        var done=function(){ msg.textContent='Copied: '+text; };
+        if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,function(){ msg.textContent=text; }); }
+        else { msg.textContent=text; }
+        return;
+      }
+      setTimeout(close,150);
+    });
+    document.addEventListener('keydown',function(e){
+      if(box.hidden) return;
+      if(e.key==='Escape') close();
+      if(e.key==='Tab'){ var f=box.querySelectorAll('button,a'), first=f[0], last=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } }
+    });
   })();
 </script>
 </body>
